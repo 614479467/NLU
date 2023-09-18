@@ -1,76 +1,77 @@
-# Automatic Evaluation
+# 📌GPT
+It is a private chatGPT API and you don't need the API-KEY to get the answer from ChatGPT.
 
-## 🚀Update
-📢[version 0.1.2] Add `normalize` for win rate normalization; Update to be compatible with `gpt>=0.0.5`; fix bug in `gpt-4-api-chatanywhere`
+# 🆚Compare with OpenAI
 
-📢[version 0.1.1] Add the third-party GPT4 interface `gpt-4-api-chatanywhere`
+Method| API-KEY |VPN| Request Machine | Intensity
+---|-----|---|---|---
+OpenAI| ✅  |✅| Yours Computer|⚡️⚡️(Limited by the performance of a single account)
+GPT(ours)| ❌  |✅ | Yours Computer|⚡️⚡️⚡️(Limited by the performance of your computer)
+(Temporarily unavailable at 0.0.9) ~GPTAgent(ours)~| ❌  |❌ | Server|⚡️(Limited by the performance of the server)
 
-📢[version 0.1.0] Add the new evaluation method: `classification_cot`; Easier prompt configuration
+# 🚀Update
+📢[version 0.1.0] We have released the beta version 0.1.0, but it won't affect the original use of 0.0.9. In this new version, you can use this API as long as you can connect to our school's network. No VPN is needed. To try 0.1.0 out, please add a `new_version=0.1.0` when you instantiate the GPT object. Nothing else is changed. After all, this is only beta version. eg. `gpt = GPT(model_name='gpt-3.5-turbo-16k', user_name='ZhangSan', new_version='0.1.0')`
 
+📢[version 0.0.9] Due to frequent official deactivation on the API, we are attempting to add user signatures to understand our API usage and identify the problem. Therefore, please do not make large-scale and long-term calls on this version (0.0.9) (this version is a test version). If there is an urgent need to use the key as a result, please get in touch with me.
 
-## 📋Usage
+📢[version 0.0.8] We have temporarily switched to a local connection due to network fluctuations. The GPTAgent() function is temporarily unavailable, but the GPT() function is running normally.
 
-ChatGPT review is `turbo.py` and GPT4 review is `gpt4.py`. You should config
+📢[version 0.0.7] Now, the GPT support the custom model, including the latest version "gpt-3.5-turbo-16k". The function call is coming soon. 
 
-- `model_a_name` & `model_b_name`: specify the two models you want to evaluate on
-- `eval_set`: specify the evaluation set name you want to evaluate on
-- `aspects`: specify the evaluation aspects file, which is put under the `aspects/`
-- `api_key`: openai api key. you only need to specify this when using `gpt-4-api`
-- `normalize`: when `True`, win rate will be calculated without tie, i.e. $win\_rate=win/(win+lose)$
-- `n_repeat`: the times to repeat the review experiments
+📢[version 0.0.6] Update the ip.
 
+📢[version 0.0.5] Now, the GPT support multi-turn conversations and each instance is a session.
 
-If you want to review single-turn questions, use `GPTReferee_NonChat`. If multi-turn dialogues, use `GPTReferee_Chat` (both put in the code).
+📢[version 0.0.4] Add the GPTAgent that means you needn't both API-KEY and VPN to use it if you don't need to call in bulk for a long time.
 
+📢[version 0.0.3] Add exception capture in call function.
 
-### How to review
-1. Model outputs: 
-   Be sure that model outputs have been put in `data/$eval_set` and are named as `$model_name.jsonl`. For example, when comparing `chatglm-6b` and `turbo` on `KUAKE-QIC100`, you should put model output files named as `chatglm-6b.jsonl` and `turbo.jsonl` respectively under `data/KUAKE-QIC100`. The file format should be 
-    - non-chat
-        ```json
-        {"id": 1, "label": "", "query": "", "output": ""}
-        ```
+📢[version 0.0.2] Add the args in the call function.
 
-    - chat
-        ```json
-        {"id": 1, "label": "", "conversation": ""}
-        ```
+When calling the model, you can add the args, which is a dictionary of the parameters of OpenAI API, such as top_p, max_tokens, temperature, etc.
 
+## 📖 How to install 
+```
+pip install git+https://github.com/FreedomIntelligence/GPT.git
+```
+## 📋 How to use
+### Single-turn GPT(): If you need to call in bulk for a long time, just use your computer to request OpenAI API with the VPN.
+（🚨**Note**: Since the 0.0.5 version, GPT() has supported multi-turn conversation, which means it has the history of the requests. If you want to use it in single-turn mode, please instantiate a GPT () before each use. ）
+```
+from gpt import GPT
+gpt=GPT(user_name="Your name")
+# gpt=GPT(model_name="gpt-3.5-turbo-16k")
+flag, response = gpt.call("今天肚子很饿")
+if flag == True:
+    print(response)
+else:
+    print(f'error: {response}')
+```
+### Multi-turn GPT(): If you want a multi-turn conversation.
+```
+from gpt import GPT
+role_a = "你一个去周记牛肉火锅的顾客。"
+role_b = "你是周记牛肉火锅的服务员。"
+start_sentence = "你好，请问今天吃点什么？"
+gpt_a = GPT(user_name="Your name")
+gpt_b = GPT(user_name="Your name")
+print(f"服务员：{start_sentence}")
+flag, response_a = gpt_a.call(start_sentence, role_a)
+print(f"顾客：{response_a}")
+for i in range(10):
+    flag, response_b = gpt_b.call(response_a, role_b)
+    print(f"服务员：{response_b}")
+    flag, response_a = gpt_a.call(response_b, role_a)
+    print(f"顾客：{response_a}")
+```
 
-2. Evaluation aspects: You can write your evaluation aspects in a file and save it to `aspects/`. Here is an example (`aspects/doc`):
-    ```
-    The response should act like the doctor using the tone, manner and vocabulary the human doctor would use. It should be to the point, without unnecessary elaboration or extraneous information.
-    The description of symptoms should be comprehensive and accurate, and the provided diagnosis should be the most reasonable inference based on all relevant factors and possibilities.
-    The treatment recommendations should be effective and reliable, taking into account the severity or stages of the illness.
-    The prescriptions should be effective and reliable, considering indications, contraindications, and dosages.
-    ```
+### Using args to constraint generation
 
-3. Run the the code (be sure you have set the config): 
-    ```bash
-    python gpt4.py
-    ```
+coming soon.
 
-
-### Outputs
-1. Output files: 
-   The review results will be saved to `{referee}/$eval_set/$model_a_name_vs._$model_b_name/random avg/metrics.json` (You can see the examples by yourself in that directory)
-    - When `referee=gpt-3.5-turbo`, save to `outputs/$eval_set`
-    - When `referee=gpt-4-api` or `referee=gpt-4-api-chatanywhere`, save to `gpt4_api_outputs/$eval_set`
-
-> `gpt-4-api-chatanywhere` can be set to use a third-party GPT4 interface.
-
-
-
-2. Metric explanations: 
-When conducting multiple experiments (`n_repeat != 1`), it aggregates the final results both at the dataset level (e.g. average over the overall score) and at the sample level (e.g. average the score for each sample). The former results will be saved to `metrics.json` while the latter saved to `metrics_sl.json`. You can also see the average score for each sample in `review_sl.jsonl`.
-
-
-
-
-
-
-
-
-
-
-
+### Common Error Causes
+1. `error: insufficient quota` : 额度用完了。
+2. `This key is associated with a deactivated account.` : 账号被封号了。
+3. `reguests.exceptions.ConnectionError: ('Connection aborted.",RemoteDisconnected("Remote end closed connection without response")` : 一般为使用者的VPN不稳定。
+4. `<class'requests.exceptions.ConnectionError'.HTTPConnectionPool(host='10.20.12.38' port=5000): Max retries exceeded with url: /?usernae=MyName (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x0808023216591340>: Failed to establish a new connection:[WinError 10060] 由于连接方在一段时间后没有正确答复或连接的主机没有反应，连接尝试失败。”))` : 一般为使用者的VPN不稳定。
+5. `请求官方API失败。Error code: 200` : 该错误源于使用者使用了0.1.0的GPT库，这个功能还不完善，请使用0.0.9版。直接使用`How to install`里的命令行安装该库就可以保证正确的版本了。
